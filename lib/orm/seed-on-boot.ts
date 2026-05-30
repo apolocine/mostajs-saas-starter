@@ -21,7 +21,7 @@ export async function seedIfEmpty(dialect: IDialect): Promise<void> {
   const demo = await users.create({
     email: 'demo@example.com',
     name: 'Demo Founder',
-    passwordHash: await hashPassword('admin123'),
+    passwordHash: hashPassword('admin123'),
   });
 
   const mvp = await projects.create({ name: 'Launch the MVP', description: 'First version to put in front of real users.', owner: demo.id });

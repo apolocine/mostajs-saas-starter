@@ -1,24 +1,22 @@
 /**
  * Password hashing with Node's built-in scrypt — no native addon (works in
- * Bolt.new / WebContainer, unlike bcrypt). Async (non-blocking) so heavy hashing
- * never stalls the event loop. Format stored: "salt:hash" (hex).
- * @author Dr Hamid MADANI <drmdh@msn.com>
+ * Bolt.new / WebContainer, unlike bcrypt). Uses the SYNCHRONOUS scryptSync:
+ * WebContainer's async crypto.scrypt is broken ("u.run is not a function"),
+ * while scryptSync works. Hashing one password is fast enough to be fine inline.
+ * Format stored: "salt:hash" (hex). @author Dr Hamid MADANI <drmdh@msn.com>
  */
-import { scrypt, randomBytes, timingSafeEqual } from 'crypto';
-import { promisify } from 'util';
+import { scryptSync, randomBytes, timingSafeEqual } from 'crypto';
 
-const scryptAsync = promisify(scrypt);
-
-export async function hashPassword(password: string): Promise<string> {
+export function hashPassword(password: string): string {
   const salt = randomBytes(16).toString('hex');
-  const hash = (await scryptAsync(password, salt, 64)) as Buffer;
-  return `${salt}:${hash.toString('hex')}`;
+  const hash = scryptSync(password, salt, 64).toString('hex');
+  return `${salt}:${hash}`;
 }
 
-export async function verifyPassword(password: string, stored: string): Promise<boolean> {
+export function verifyPassword(password: string, stored: string): boolean {
   const [salt, hashHex] = stored.split(':');
   if (!salt || !hashHex) return false;
   const expected = Buffer.from(hashHex, 'hex');
-  const actual = (await scryptAsync(password, salt, 64)) as Buffer;
+  const actual = scryptSync(password, salt, 64);
   return expected.length === actual.length && timingSafeEqual(expected, actual);
 }
