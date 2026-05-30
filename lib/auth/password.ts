@@ -1,22 +1,37 @@
 /**
- * Password hashing with Node's built-in scrypt — no native addon (works in
- * Bolt.new / WebContainer, unlike bcrypt). Uses the SYNCHRONOUS scryptSync:
- * WebContainer's async crypto.scrypt is broken ("u.run is not a function"),
- * while scryptSync works. Hashing one password is fast enough to be fine inline.
+ * Password hashing — salted, iterated SHA-256.
+ *
+ * Why not scrypt/bcrypt/argon2? They rely on a worker/threadpool path
+ * (`crypto.scrypt`, `pbkdf2`) that is **broken in some WebContainers**
+ * (StackBlitz: "TypeError: f.run is not a function"), and bcrypt is a native
+ * addon. `crypto.createHash` is a plain digest — it works in every runtime
+ * (Node, Bolt.new, StackBlitz, edge), which is what a "boots anywhere" starter
+ * needs.
+ *
+ * 🎓 For production, swap this for a real password KDF (argon2id or scrypt on a
+ * real server). The interface (hashPassword / verifyPassword) stays the same.
+ *
  * Format stored: "salt:hash" (hex). @author Dr Hamid MADANI <drmdh@msn.com>
  */
-import { scryptSync, randomBytes, timingSafeEqual } from 'crypto';
+import { createHash, randomBytes, timingSafeEqual } from 'crypto';
+
+const ITERATIONS = 10_000;
+
+function derive(password: string, salt: string): Buffer {
+  let h = createHash('sha256').update(`${salt}:${password}`).digest();
+  for (let i = 0; i < ITERATIONS; i++) h = createHash('sha256').update(h).digest();
+  return h;
+}
 
 export function hashPassword(password: string): string {
   const salt = randomBytes(16).toString('hex');
-  const hash = scryptSync(password, salt, 64).toString('hex');
-  return `${salt}:${hash}`;
+  return `${salt}:${derive(password, salt).toString('hex')}`;
 }
 
 export function verifyPassword(password: string, stored: string): boolean {
   const [salt, hashHex] = stored.split(':');
   if (!salt || !hashHex) return false;
   const expected = Buffer.from(hashHex, 'hex');
-  const actual = scryptSync(password, salt, 64);
+  const actual = derive(password, salt);
   return expected.length === actual.length && timingSafeEqual(expected, actual);
 }
