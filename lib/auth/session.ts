@@ -13,11 +13,15 @@ const TTL_DAYS = 7;
 
 /** Create a session for a user and set the cookie. */
 export async function createSession(userId: string): Promise<void> {
-  const { sessions } = await getRepos();
+  // Get the cookie jar FIRST — before any `await` on the DB. Some runtimes
+  // (StackBlitz WebContainer) lose Next's request async-context across an async
+  // ORM call, which makes a later cookies() throw "called outside a request
+  // scope". Capturing the jar up-front avoids that.
+  const jar = await cookies();
   const token = randomBytes(32).toString('hex');
   const expiresAt = new Date(Date.now() + TTL_DAYS * 86400000);
+  const { sessions } = await getRepos();
   await sessions.create({ token, user: userId, expiresAt });
-  const jar = await cookies();
   jar.set(COOKIE, token, { httpOnly: true, sameSite: 'lax', path: '/', expires: expiresAt });
 }
 
