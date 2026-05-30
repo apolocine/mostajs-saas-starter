@@ -3,12 +3,15 @@
  * @author Dr Hamid MADANI <drmdh@msn.com>
  */
 'use server';
+import { cookies } from 'next/headers';
 import { redirect } from 'next/navigation';
 import { getRepos } from '../orm/repositories';
 import { hashPassword, verifyPassword } from '../auth/password';
 import { createSession, destroySession } from '../auth/session';
 
 export async function signup(formData: FormData) {
+  // Capture the cookie jar FIRST — before any DB `await` (see createSession).
+  const jar = await cookies();
   const email = String(formData.get('email') ?? '').toLowerCase().trim();
   const name = String(formData.get('name') ?? '').trim();
   const password = String(formData.get('password') ?? '');
@@ -18,11 +21,12 @@ export async function signup(formData: FormData) {
   if (await users.findOne({ email })) redirect('/signup?error=exists');
 
   const user = await users.create({ email, name, passwordHash: hashPassword(password) });
-  await createSession(user.id);
+  await createSession(jar, user.id);
   redirect('/dashboard');
 }
 
 export async function login(formData: FormData) {
+  const jar = await cookies();
   const email = String(formData.get('email') ?? '').toLowerCase().trim();
   const password = String(formData.get('password') ?? '');
 
@@ -30,7 +34,7 @@ export async function login(formData: FormData) {
   const user = await users.findOne({ email });
   if (!user || !verifyPassword(password, user.passwordHash)) redirect('/login?error=invalid');
 
-  await createSession(user.id);
+  await createSession(jar, user.id);
   redirect('/dashboard');
 }
 

@@ -11,13 +11,17 @@ import type { User } from '../orm/repositories';
 const COOKIE = 'session';
 const TTL_DAYS = 7;
 
-/** Create a session for a user and set the cookie. */
-export async function createSession(userId: string): Promise<void> {
-  // Get the cookie jar FIRST — before any `await` on the DB. Some runtimes
-  // (StackBlitz WebContainer) lose Next's request async-context across an async
-  // ORM call, which makes a later cookies() throw "called outside a request
-  // scope". Capturing the jar up-front avoids that.
-  const jar = await cookies();
+/** The mutable cookie store returned by `await cookies()`. */
+export type CookieJar = Awaited<ReturnType<typeof cookies>>;
+
+/**
+ * Create a session and set the cookie. Takes the cookie jar as a parameter:
+ * the caller must obtain it via `await cookies()` BEFORE any DB `await`. Some
+ * runtimes (StackBlitz WebContainer) lose Next's request async-context across an
+ * async ORM call, so calling `cookies()` after a DB await throws "called outside
+ * a request scope". Passing a jar captured up-front avoids that everywhere.
+ */
+export async function createSession(jar: CookieJar, userId: string): Promise<void> {
   const token = randomBytes(32).toString('hex');
   const expiresAt = new Date(Date.now() + TTL_DAYS * 86400000);
   const { sessions } = await getRepos();
