@@ -1,24 +1,17 @@
 import Link from 'next/link';
-import { getCurrentUser } from '@/lib/auth/session';
 
-export const dynamic = 'force-dynamic';
+// Static marketing page — no auth, no DB, no cookies. Renders instantly and
+// stays prerendered (important for fast, reliable boots in WebContainers).
 
-export default async function Home() {
-  const user = await getCurrentUser();
+export default function Home() {
   return (
     <>
       <nav className="nav">
         <div className="container">
           <Link href="/" className="brand">◆ YourStartup <span className="dim">· SaaS starter</span></Link>
           <div className="nav-actions">
-            {user ? (
-              <Link href="/dashboard" className="btn btn-primary btn-sm">Dashboard →</Link>
-            ) : (
-              <>
-                <Link href="/login" className="btn btn-ghost btn-sm">Log in</Link>
-                <Link href="/signup" className="btn btn-primary btn-sm">Get started</Link>
-              </>
-            )}
+            <Link href="/login" className="btn btn-ghost btn-sm">Log in</Link>
+            <Link href="/signup" className="btn btn-primary btn-sm">Get started</Link>
           </div>
         </div>
       </nav>
