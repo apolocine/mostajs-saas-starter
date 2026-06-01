@@ -7,7 +7,7 @@
  *
  * @author Dr Hamid MADANI <drmdh@msn.com>
  */
-import { createGetCurrentUser } from '@mostajs/auth-lite';
+import { createGetCurrentUser } from '@mostajs/auth-lite/next';
 import { getRepos } from '../orm/repositories';
 import type { User } from '../orm/repositories';
 
