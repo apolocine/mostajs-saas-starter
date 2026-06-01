@@ -14,4 +14,4 @@
 import { createAuthHandlers } from '@mostajs/auth-lite/next';
 import { getRepos } from '../orm/repositories';
 
-export const { login, signup, logout } = createAuthHandlers({ getRepos });
+export const { login, signup, logout } = createAuthHandlers({ getRepos, crossSiteCookie: true });
