@@ -10,9 +10,11 @@ export const dynamic = 'force-dynamic';
 type Task = { id: string; title: string; done: boolean };
 
 export default async function ProjectPage({ params }: { params: Promise<{ id: string }> }) {
-  const { id } = await params;
+  // getCurrentUser() lit cookies() → DOIT être le 1er await (avant `await params`)
+  // sinon le request scope (AsyncLocalStorage) est perdu en WebContainer.
   const user = await getCurrentUser();
   if (!user) redirect('/login');
+  const { id } = await params;
   const { projects } = await getRepos();
   const project = (await projects.findByIdWithRelations(id, ['tasks'])) as
     | { name: string; description?: string; owner: string; tasks?: Task[] }

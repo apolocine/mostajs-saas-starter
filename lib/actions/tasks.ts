@@ -3,7 +3,7 @@
  * @author Dr Hamid MADANI <drmdh@msn.com>
  */
 'use server';
-import { revalidatePath } from 'next/cache';
+import { safeRevalidate } from '../revalidate';
 import { redirect } from 'next/navigation';
 import { getRepos } from '../orm/repositories';
 import { getCurrentUser } from '../auth/session';
@@ -20,19 +20,19 @@ export async function addTask(projectId: string, formData: FormData) {
   if (!title) return;
   const { tasks } = await getRepos();
   await tasks.create({ title, done: false, project: projectId });
-  revalidatePath(`/dashboard/projects/${projectId}`);
+  safeRevalidate(`/dashboard/projects/${projectId}`);
 }
 
 export async function toggleTask(id: string, projectId: string, done: boolean) {
   await requireUser();
   const { tasks } = await getRepos();
   await tasks.update(id, { done });
-  revalidatePath(`/dashboard/projects/${projectId}`);
+  safeRevalidate(`/dashboard/projects/${projectId}`);
 }
 
 export async function deleteTask(id: string, projectId: string) {
   await requireUser();
   const { tasks } = await getRepos();
   await tasks.delete(id);
-  revalidatePath(`/dashboard/projects/${projectId}`);
+  safeRevalidate(`/dashboard/projects/${projectId}`);
 }
