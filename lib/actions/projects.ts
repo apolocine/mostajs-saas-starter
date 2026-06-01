@@ -18,11 +18,13 @@ export async function createProject(formData: FormData) {
   safeRevalidate('/dashboard');
 }
 
-export async function deleteProject(id: string) {
+export async function deleteProject(formData: FormData) {
   const user = await getCurrentUser();
   if (!user) redirect('/login');
+  const id = String(formData.get('id') ?? '');
   const { projects } = await getRepos();
   const project = await projects.findById(id);
   if (project && project.owner === user.id) await projects.delete(id); // soft-delete, owner-scoped
   safeRevalidate('/dashboard');
+  redirect('/dashboard');
 }

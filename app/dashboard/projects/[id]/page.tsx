@@ -32,13 +32,15 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
           <h1>{project.name}</h1>
           <p className="muted" style={{ margin: 0 }}>{doneCount}/{tasks.length} done · {project.description || 'No description'}</p>
         </div>
-        <form action={async () => { 'use server'; await deleteProject(id); redirect('/dashboard'); }}>
+        <form action={deleteProject}>
+          <input type="hidden" name="id" value={id} />
           <button className="btn btn-danger btn-sm" type="submit">Delete project</button>
         </form>
       </div>
 
       <div className="panel">
-        <form action={addTask.bind(null, id)} className="row-form">
+        <form action={addTask} className="row-form">
+          <input type="hidden" name="projectId" value={id} />
           <div className="field"><label>New task</label><input className="input" name="title" placeholder="What needs doing?" required /></div>
           <button className="btn btn-primary" type="submit">Add task</button>
         </form>
@@ -50,11 +52,16 @@ export default async function ProjectPage({ params }: { params: Promise<{ id: st
         <ul className="tasks">
           {tasks.map((t) => (
             <li key={t.id} className={`task ${t.done ? 'done' : ''}`}>
-              <form action={async () => { 'use server'; await toggleTask(t.id, id, !t.done); }}>
+              <form action={toggleTask}>
+                <input type="hidden" name="id" value={t.id} />
+                <input type="hidden" name="projectId" value={id} />
+                <input type="hidden" name="done" value={String(!t.done)} />
                 <button className="check" type="submit" aria-label="toggle task" />
               </form>
               <span className="task-title">{t.title}</span>
-              <form action={async () => { 'use server'; await deleteTask(t.id, id); }}>
+              <form action={deleteTask}>
+                <input type="hidden" name="id" value={t.id} />
+                <input type="hidden" name="projectId" value={id} />
                 <button className="btn btn-danger btn-sm" type="submit" aria-label="delete task">✕</button>
               </form>
             </li>
