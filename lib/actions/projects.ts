@@ -3,7 +3,6 @@
  * @author Dr Hamid MADANI <drmdh@msn.com>
  */
 'use server';
-import { safeRevalidate } from '../revalidate';
 import { redirect } from 'next/navigation';
 import { getRepos } from '../orm/repositories';
 import { getCurrentUser } from '../auth/session';
@@ -15,7 +14,7 @@ export async function createProject(formData: FormData) {
   if (!name) return;
   const { projects } = await getRepos();
   await projects.create({ name, description: String(formData.get('description') ?? ''), owner: user.id });
-  safeRevalidate('/dashboard');
+  redirect('/dashboard'); // re-navigation = refresh (WebContainer-safe)
 }
 
 export async function deleteProject(formData: FormData) {
@@ -25,6 +24,5 @@ export async function deleteProject(formData: FormData) {
   const { projects } = await getRepos();
   const project = await projects.findById(id);
   if (project && project.owner === user.id) await projects.delete(id); // soft-delete, owner-scoped
-  safeRevalidate('/dashboard');
-  redirect('/dashboard');
+  redirect('/dashboard'); // re-navigation = refresh (WebContainer-safe)
 }

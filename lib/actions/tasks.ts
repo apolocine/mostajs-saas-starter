@@ -3,7 +3,6 @@
  * @author Dr Hamid MADANI <drmdh@msn.com>
  */
 'use server';
-import { safeRevalidate } from '../revalidate';
 import { redirect } from 'next/navigation';
 import { getRepos } from '../orm/repositories';
 import { getCurrentUser } from '../auth/session';
@@ -26,7 +25,7 @@ export async function addTask(formData: FormData) {
   if (!title || !projectId) return;
   const { tasks } = await getRepos();
   await tasks.create({ title, done: false, project: projectId });
-  safeRevalidate(`/dashboard/projects/${projectId}`);
+  redirect(`/dashboard/projects/${projectId}`); // re-navigation = refresh (WebContainer-safe)
 }
 
 export async function toggleTask(formData: FormData) {
@@ -36,7 +35,7 @@ export async function toggleTask(formData: FormData) {
   const done = formData.get('done') === 'true';
   const { tasks } = await getRepos();
   await tasks.update(id, { done });
-  safeRevalidate(`/dashboard/projects/${projectId}`);
+  redirect(`/dashboard/projects/${projectId}`); // re-navigation = refresh (WebContainer-safe)
 }
 
 export async function deleteTask(formData: FormData) {
@@ -45,5 +44,5 @@ export async function deleteTask(formData: FormData) {
   const projectId = String(formData.get('projectId') ?? '');
   const { tasks } = await getRepos();
   await tasks.delete(id);
-  safeRevalidate(`/dashboard/projects/${projectId}`);
+  redirect(`/dashboard/projects/${projectId}`); // re-navigation = refresh (WebContainer-safe)
 }
